@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.utils import timezone
+from django.urls import reverse
 # Create your models here.
 
 class Category(models.Model):
@@ -15,6 +16,10 @@ class Category(models.Model):
     """
     name = models.CharField(max_length=100)
 
+    class Meta:
+        verbose_name = '分类'
+        verbose_name_plural = verbose_name
+
     def __str__(self):
         return self.name
 
@@ -25,7 +30,10 @@ class Tag(models.Model):
     再次强调一定要继承 models.Model 类！
     """
     name = models.CharField(max_length=100)
-    
+
+    class Meta:
+        verbose_name = '标签'
+        verbose_name_plural = verbose_name
     
     def __str__(self):
             return self.name
@@ -43,7 +51,7 @@ class Post(models.Model):
     body = models.TextField()
  
     # 这两个列分别表示文章的创建时间和最后一次修改时间，存储时间的字段用 DateTimeField 类型。
-    created_time = models.DateTimeField()
+    created_time = models.DateTimeField('创建时间',default=timezone.now)
     modified_time = models.DateTimeField()
  
     # 文章摘要，可以没有文章摘要，但默认情况下 CharField 要求我们必须存入数据，否则就会报错。
@@ -71,5 +79,19 @@ class Post(models.Model):
     # Category 类似。
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        self.modified_time = timezone.now()
+        super().save(*args, **kwargs)
+
+
+
+
+    class Meta:
+        verbose_name="文章"
+        verbose_name_plural = verbose_name
+
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('blog:detail', kwargs={'pk': self.pk})
